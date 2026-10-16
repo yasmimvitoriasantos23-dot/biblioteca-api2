@@ -1,24 +1,114 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista de Tarefas - Versão 1</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Biblioteca Escolar</title>
+<style>
+:root{--navy:#243b53;--blue:#3b82f6;--bg:#f3f6fa;--ink:#243447;--muted:#64748b;--line:#dbe3ec;--green:#15803d;--red:#b91c1c}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:var(--navy);color:white;padding:22px clamp(16px,4vw,40px)}header h1{margin:0 0 6px;font-size:clamp(23px,3vw,32px)}header p{margin:0;color:#dbeafe}
+main{max-width:1200px;margin:auto;padding:22px 16px 48px}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+button,.button{border:0;border-radius:8px;padding:10px 14px;background:var(--blue);color:white;font-weight:700;cursor:pointer}
+button:hover{filter:brightness(.95)}button.secondary{background:#e2e8f0;color:#243447}button.danger{background:var(--red)}button.green{background:var(--green)}
+.tabs button.active{background:var(--navy);color:white}.panel{display:none}.panel.active{display:block}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:18px}
+.card,.section{background:white;border:1px solid var(--line);border-radius:12px;padding:18px;box-shadow:0 2px 7px #0f172a0a}
+.card span{display:block;color:var(--muted);font-size:14px}.card strong{display:block;font-size:30px;margin-top:8px}
+.section{margin-bottom:16px}.section h2{margin:0 0 14px;font-size:20px}
+.formgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;align-items:end}
+label{display:block;font-size:13px;font-weight:700;margin-bottom:5px}input,select,textarea{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font:inherit;background:white;color:var(--ink)}
+.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}.toolbar{display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;align-items:center;margin-bottom:12px}.toolbar input{max-width:360px}
+table{width:100%;border-collapse:collapse;min-width:650px}th,td{text-align:left;padding:11px 9px;border-bottom:1px solid var(--line);font-size:14px}th{background:#f8fafc}
+.tablewrap{overflow-x:auto}.pill{display:inline-block;padding:4px 8px;border-radius:99px;background:#dcfce7;color:#166534;font-size:12px;font-weight:bold}.pill.overdue{background:#fee2e2;color:#991b1b}
+.note{font-size:13px;color:var(--muted);line-height:1.5}.empty{padding:22px;text-align:center;color:var(--muted)}.msg{padding:11px 13px;border-radius:8px;margin-bottom:14px;display:none}.msg.ok{display:block;background:#dcfce7;color:#166534}.msg.err{display:block;background:#fee2e2;color:#991b1b}
+footer{text-align:center;color:var(--muted);padding:20px;font-size:12px}
+@media(max-width:600px){header{padding:18px 16px}.section{padding:14px}.toolbar{align-items:stretch}.toolbar input{max-width:none}.tabs button{flex:1}}
+</style>
 </head>
 <body>
-
-    <h1>Minha Lista de Tarefas</h1>
-
-    <!-- Campo de Entrada e Botão -->
-    <div>
-        <input type="text" id="inputTarefa" placeholder="Digite uma tarefa...">
-        <button onclick="adicionarTarefa()">Adicionar</button>
-    </div>
-
-    <!-- Lista onde as tarefas serão inseridas -->
-    <ul id="listaTarefas"></ul>
-
-    <script src="script.js"></script>
+<header><h1>📚 Biblioteca Escolar</h1><p>Controle de livros, alunos e empréstimos — versão simples para abrir no navegador.</p></header>
+<main>
+<div id="message" class="msg"></div>
+<nav class="tabs" aria-label="Seções">
+<button class="active" data-tab="inicio">Início</button><button data-tab="livros">Livros</button><button data-tab="alunos">Alunos</button><button data-tab="emprestimos">Empréstimos</button><button data-tab="relatorios">Relatórios</button>
+</nav>
+<section id="inicio" class="panel active">
+<div class="cards">
+<div class="card"><span>Livros cadastrados</span><strong id="countBooks">0</strong></div>
+<div class="card"><span>Exemplares disponíveis</span><strong id="countAvailable">0</strong></div>
+<div class="card"><span>Alunos cadastrados</span><strong id="countStudents">0</strong></div>
+<div class="card"><span>Empréstimos em aberto</span><strong id="countLoans">0</strong></div>
+<div class="card"><span>Em atraso</span><strong id="countOverdue">0</strong></div>
+</div>
+<div class="section"><h2>Como começar</h2><ol><li>Cadastre os livros na aba <b>Livros</b>.</li><li>Cadastre os alunos na aba <b>Alunos</b>.</li><li>Registre empréstimos na aba <b>Empréstimos</b> e marque a devolução quando o livro voltar.</li><li>Use <b>Relatórios</b> para consultar e exportar os dados.</li></ol><p class="note">Os dados ficam salvos neste navegador e neste dispositivo. Use “Fazer backup” em Relatórios para guardar uma cópia. Não limpe os dados do navegador sem exportar o backup.</p></div>
+</section>
+<section id="livros" class="panel">
+<div class="section"><h2>Cadastrar livro</h2><form id="bookForm"><input type="hidden" id="bookId"><div class="formgrid">
+<div><label for="bookTitle">Título *</label><input id="bookTitle" required maxlength="160"></div><div><label for="bookAuthor">Autor</label><input id="bookAuthor" maxlength="120"></div><div><label for="bookIsbn">ISBN / código</label><input id="bookIsbn" maxlength="50"></div><div><label for="bookCategory">Categoria</label><input id="bookCategory" maxlength="80" placeholder="Ex.: Literatura"></div><div><label for="bookQty">Quantidade de exemplares *</label><input id="bookQty" type="number" min="1" max="9999" value="1" required></div>
+</div><div class="actions"><button type="submit">Salvar livro</button><button type="button" class="secondary" id="cancelBook" hidden>Cancelar edição</button></div></form></div>
+<div class="section"><div class="toolbar"><h2>Acervo</h2><input id="bookSearch" placeholder="Buscar título, autor ou código..."></div><div class="tablewrap"><table><thead><tr><th>Título</th><th>Autor</th><th>Código</th><th>Categoria</th><th>Total</th><th>Disponíveis</th><th>Ações</th></tr></thead><tbody id="booksTable"></tbody></table></div></div>
+</section>
+<section id="alunos" class="panel">
+<div class="section"><h2>Cadastrar aluno</h2><form id="studentForm"><input type="hidden" id="studentId"><div class="formgrid"><div><label for="studentName">Nome completo *</label><input id="studentName" required maxlength="160"></div><div><label for="studentClass">Turma / série</label><input id="studentClass" maxlength="80" placeholder="Ex.: 1º DS"></div><div><label for="studentCode">Matrícula</label><input id="studentCode" maxlength="60"></div></div><div class="actions"><button type="submit">Salvar aluno</button><button type="button" class="secondary" id="cancelStudent" hidden>Cancelar edição</button></div></form></div>
+<div class="section"><div class="toolbar"><h2>Alunos cadastrados</h2><input id="studentSearch" placeholder="Buscar aluno, turma ou matrícula..."></div><div class="tablewrap"><table><thead><tr><th>Nome</th><th>Turma</th><th>Matrícula</th><th>Empréstimos em aberto</th><th>Ações</th></tr></thead><tbody id="studentsTable"></tbody></table></div></div>
+</section>
+<section id="emprestimos" class="panel">
+<div class="section"><h2>Novo empréstimo</h2><form id="loanForm"><div class="formgrid"><div><label for="loanStudent">Aluno *</label><select id="loanStudent" required></select></div><div><label for="loanBook">Livro *</label><select id="loanBook" required></select></div><div><label for="loanDate">Data do empréstimo *</label><input id="loanDate" type="date" required></div><div><label for="loanDue">Data prevista para devolução *</label><input id="loanDue" type="date" required></div></div><div class="actions"><button type="submit">Registrar empréstimo</button></div></form><p class="note">O sistema impede empréstimos quando não há exemplares disponíveis.</p></div>
+<div class="section"><div class="toolbar"><h2>Histórico de empréstimos</h2><input id="loanSearch" placeholder="Buscar por aluno ou livro..."></div><div class="tablewrap"><table><thead><tr><th>Livro</th><th>Aluno</th><th>Turma</th><th>Retirada</th><th>Devolução prevista</th><th>Status</th><th>Ação</th></tr></thead><tbody id="loansTable"></tbody></table></div></div>
+</section>
+<section id="relatorios" class="panel">
+<div class="section"><h2>Relatórios e segurança dos dados</h2><p>Exporte seus dados para abrir em planilhas ou guarde um arquivo de backup.</p><div class="actions"><button id="exportBooks">Exportar livros (CSV)</button><button id="exportStudents">Exportar alunos (CSV)</button><button id="exportLoans">Exportar empréstimos (CSV)</button><button id="backup" class="green">Fazer backup completo (JSON)</button><button id="restoreButton" class="secondary">Restaurar backup</button><input id="restoreFile" type="file" accept=".json,application/json" hidden><button id="print" class="secondary">Imprimir / salvar em PDF</button></div><p class="note">Para usar em outro navegador ou computador, faça o backup e restaure o arquivo nesse dispositivo. Esta versão não sincroniza automaticamente entre aparelhos e não possui login de usuários.</p></div>
+<div class="section"><h2>Resumo do acervo</h2><div id="reportSummary"></div></div>
+<div class="section"><h2>Apagar dados</h2><p class="note">Apaga livros, alunos e histórico deste navegador. Exporte um backup antes. Essa ação não pode ser desfeita.</p><button class="danger" id="clearData">Apagar todos os dados</button></div>
+</section>
+</main><footer>Biblioteca Escolar • Aplicativo local para uso educacional</footer>
+<script>
+const KEY='biblioteca_escolar_v1';
+let db=loadDB();
+function loadDB(){try{const d=JSON.parse(localStorage.getItem(KEY));if(d&&Array.isArray(d.books)&&Array.isArray(d.students)&&Array.isArray(d.loans))return d}catch(e){}return {books:[],students:[],loans:[]}}
+function save(){localStorage.setItem(KEY,JSON.stringify(db));render()}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function today(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+function dateFmt(s){if(!s)return '—';const [y,m,d]=s.split('-');return `${d}/${m}/${y}`}
+function openLoans(){return db.loans.filter(l=>!l.returned)}
+function available(b){return Math.max(0,Number(b.qty)-openLoans().filter(l=>l.bookId===b.id).length)}
+function overdue(l){return !l.returned&&l.due<today()}
+function msg(text,kind='ok'){const el=document.getElementById('message');el.textContent=text;el.className='msg '+(kind==='err'?'err':'ok');window.scrollTo({top:0,behavior:'smooth'});setTimeout(()=>el.className='msg',4500)}
+document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===b.dataset.tab));render()}));
+document.getElementById('bookForm').addEventListener('submit',e=>{e.preventDefault();const id=bookId.value;const qty=Number(bookQty.value);const active=db.loans.filter(l=>!l.returned&&l.bookId===id).length;if(id&&qty<active){msg(`A quantidade não pode ser menor que os ${active} exemplares emprestados.`, 'err');return}const item={id:id||uid(),title:bookTitle.value.trim(),author:bookAuthor.value.trim(),isbn:bookIsbn.value.trim(),category:bookCategory.value.trim(),qty};if(!item.title||qty<1)return;const idx=db.books.findIndex(b=>b.id===id);if(idx>=0)db.books[idx]=item;else db.books.push(item);resetBook();save();msg('Livro salvo com sucesso.')});
+function resetBook(){bookForm.reset();bookId.value='';bookQty.value='1';cancelBook.hidden=true}
+cancelBook.addEventListener('click',resetBook);
+function editBook(id){const b=db.books.find(x=>x.id===id);if(!b)return;bookId.value=b.id;bookTitle.value=b.title;bookAuthor.value=b.author;bookIsbn.value=b.isbn;bookCategory.value=b.category;bookQty.value=b.qty;cancelBook.hidden=false;document.querySelector('[data-tab="livros"]').click();bookTitle.focus()}
+function deleteBook(id){if(openLoans().some(l=>l.bookId===id)){msg('Não é possível apagar um livro com empréstimo em aberto.','err');return}if(confirm('Apagar este livro do cadastro?')){db.books=db.books.filter(b=>b.id!==id);save();msg('Livro apagado.')}} 
+document.getElementById('studentForm').addEventListener('submit',e=>{e.preventDefault();const id=studentId.value;const item={id:id||uid(),name:studentName.value.trim(),className:studentClass.value.trim(),code:studentCode.value.trim()};if(!item.name)return;const idx=db.students.findIndex(s=>s.id===id);if(idx>=0)db.students[idx]=item;else db.students.push(item);resetStudent();save();msg('Aluno salvo com sucesso.')});
+function resetStudent(){studentForm.reset();studentId.value='';cancelStudent.hidden=true}
+cancelStudent.addEventListener('click',resetStudent);
+function editStudent(id){const s=db.students.find(x=>x.id===id);if(!s)return;studentId.value=s.id;studentName.value=s.name;studentClass.value=s.className;studentCode.value=s.code;cancelStudent.hidden=false;document.querySelector('[data-tab="alunos"]').click();studentName.focus()}
+function deleteStudent(id){if(openLoans().some(l=>l.studentId===id)){msg('Não é possível apagar um aluno com empréstimo em aberto.','err');return}if(confirm('Apagar este aluno do cadastro?')){db.students=db.students.filter(s=>s.id!==id);save();msg('Aluno apagado.')}} 
+loanDate.value=today();loanDue.value=(()=>{const d=new Date();d.setDate(d.getDate()+14);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`})();
+document.getElementById('loanForm').addEventListener('submit',e=>{e.preventDefault();const s=db.students.find(x=>x.id===loanStudent.value),b=db.books.find(x=>x.id===loanBook.value);if(!s||!b){msg('Cadastre pelo menos um aluno e um livro disponível.','err');return}if(available(b)<1){msg('Não há exemplares disponíveis deste livro.','err');return}if(loanDue.value<loanDate.value){msg('A data de devolução não pode ser anterior à retirada.','err');return}db.loans.unshift({id:uid(),bookId:b.id,studentId:s.id,date:loanDate.value,due:loanDue.value,returned:false,returnDate:''});save();msg('Empréstimo registrado.');loanForm.reset();loanDate.value=today();loanDue.value=(()=>{const d=new Date();d.setDate(d.getDate()+14);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`})()});
+function returnLoan(id){const l=db.loans.find(x=>x.id===id);if(!l||l.returned)return;if(confirm('Confirmar a devolução deste livro?')){l.returned=true;l.returnDate=today();save();msg('Devolução registrada.')}} 
+function render(){const term=(id)=>document.getElementById(id).value.toLowerCase().trim();const bs=db.books,ss=db.students,ls=db.loans,ol=openLoans();countBooks.textContent=bs.length;countAvailable.textContent=bs.reduce((n,b)=>n+available(b),0);countStudents.textContent=ss.length;countLoans.textContent=ol.length;countOverdue.textContent=ol.filter(overdue).length;
+booksTable.innerHTML=bs.filter(b=>[b.title,b.author,b.isbn,b.category].join(' ').toLowerCase().includes(term('bookSearch'))).map(b=>`<tr><td>${esc(b.title)}</td><td>${esc(b.author||'—')}</td><td>${esc(b.isbn||'—')}</td><td>${esc(b.category||'—')}</td><td>${b.qty}</td><td>${available(b)}</td><td><div class="actions"><button class="secondary" onclick="editBook('${b.id}')">Editar</button><button class="danger" onclick="deleteBook('${b.id}')">Apagar</button></div></td></tr>`).join('')||'<tr><td colspan="7" class="empty">Nenhum livro cadastrado.</td></tr>';
+studentsTable.innerHTML=ss.filter(s=>[s.name,s.className,s.code].join(' ').toLowerCase().includes(term('studentSearch'))).map(s=>`<tr><td>${esc(s.name)}</td><td>${esc(s.className||'—')}</td><td>${esc(s.code||'—')}</td><td>${ol.filter(l=>l.studentId===s.id).length}</td><td><div class="actions"><button class="secondary" onclick="editStudent('${s.id}')">Editar</button><button class="danger" onclick="deleteStudent('${s.id}')">Apagar</button></div></td></tr>`).join('')||'<tr><td colspan="5" class="empty">Nenhum aluno cadastrado.</td></tr>';
+loanStudent.innerHTML='<option value="">Selecione um aluno</option>'+ss.slice().sort((a,b)=>a.name.localeCompare(b.name,'pt-BR')).map(s=>`<option value="${s.id}">${esc(s.name)}${s.className?' — '+esc(s.className):''}</option>`).join('');
+loanBook.innerHTML='<option value="">Selecione um livro</option>'+bs.filter(b=>available(b)>0).sort((a,b)=>a.title.localeCompare(b.title,'pt-BR')).map(b=>`<option value="${b.id}">${esc(b.title)} — ${available(b)} disponível(is)</option>`).join('');
+loansTable.innerHTML=ls.filter(l=>{const s=ss.find(x=>x.id===l.studentId),b=bs.find(x=>x.id===l.bookId);return ((s?.name||'')+' '+(b?.title||'')).toLowerCase().includes(term('loanSearch'))}).map(l=>{const s=ss.find(x=>x.id===l.studentId),b=bs.find(x=>x.id===l.bookId);const status=l.returned?`Devolvido em ${dateFmt(l.returnDate)}`:overdue(l)?'Em atraso':'Emprestado';return `<tr><td>${esc(b?.title||'Livro removido')}</td><td>${esc(s?.name||'Aluno removido')}</td><td>${esc(s?.className||'—')}</td><td>${dateFmt(l.date)}</td><td>${dateFmt(l.due)}</td><td>${l.returned?'<span class="pill">Devolvido</span>':overdue(l)?'<span class="pill overdue">Em atraso</span>':'<span class="pill">Emprestado</span>'}${l.returned?`<br><small>${status}</small>`:''}</td><td>${l.returned?'—':`<button class="green" onclick="returnLoan('${l.id}')">Registrar devolução</button>`}</td></tr>`}).join('')||'<tr><td colspan="7" class="empty">Nenhum empréstimo registrado.</td></tr>';
+reportSummary.innerHTML=`<p><b>Livros cadastrados:</b> ${bs.length} títulos, ${bs.reduce((n,b)=>n+Number(b.qty),0)} exemplares no total.</p><p><b>Disponíveis:</b> ${bs.reduce((n,b)=>n+available(b),0)} exemplares.</p><p><b>Alunos cadastrados:</b> ${ss.length}.</p><p><b>Empréstimos em aberto:</b> ${ol.length}; <b>em atraso:</b> ${ol.filter(overdue).length}.</p>`}
+['bookSearch','studentSearch','loanSearch'].forEach(id=>document.getElementById(id).addEventListener('input',render));
+function csvDownload(filename,rows){const csv=rows.map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(';')).join('\r\n');const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});downloadBlob(filename,blob)}
+function downloadBlob(filename,blob){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+exportBooks.addEventListener('click',()=>csvDownload('livros.csv',[['Título','Autor','Código','Categoria','Quantidade','Disponíveis'],...db.books.map(b=>[b.title,b.author,b.isbn,b.category,b.qty,available(b)])]));
+exportStudents.addEventListener('click',()=>csvDownload('alunos.csv',[['Nome','Turma','Matrícula'],...db.students.map(s=>[s.name,s.className,s.code])]));
+exportLoans.addEventListener('click',()=>csvDownload('emprestimos.csv',[['Livro','Aluno','Turma','Data empréstimo','Data prevista','Status','Data devolução'],...db.loans.map(l=>{const s=db.students.find(x=>x.id===l.studentId),b=db.books.find(x=>x.id===l.bookId);return [b?.title,s?.name,s?.className,dateFmt(l.date),dateFmt(l.due),l.returned?'Devolvido':overdue(l)?'Em atraso':'Emprestado',dateFmt(l.returnDate)]})]));
+backup.addEventListener('click',()=>downloadBlob('backup-biblioteca-'+today()+'.json',new Blob([JSON.stringify(db,null,2)],{type:'application/json'})));
+restoreButton.addEventListener('click',()=>restoreFile.click());
+restoreFile.addEventListener('change',async()=>{const f=restoreFile.files[0];if(!f)return;try{const d=JSON.parse(await f.text());if(!d||!Array.isArray(d.books)||!Array.isArray(d.students)||!Array.isArray(d.loans))throw Error();if(!confirm('Restaurar substituirá os dados atuais. Deseja continuar?'))return;db=d;save();msg('Backup restaurado com sucesso.')}catch(e){msg('Arquivo de backup inválido. Nenhum dado foi restaurado.','err')}finally{restoreFile.value=''}});
+print.addEventListener('click',()=>window.print());
+clearData.addEventListener('click',()=>{if(confirm('Tem certeza? Todos os dados salvos neste navegador serão apagados.')){db={books:[],students:[],loans:[]};save();msg('Todos os dados foram apagados.')}});
+render();
+</script>
 </body>
 </html>
--------------
